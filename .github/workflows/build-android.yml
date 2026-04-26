@@ -1,9 +1,7 @@
-name: Build Mizofy TV APKs
-
+name: Build Android APK
 on:
   push:
-    branches:
-      - main
+    branches: [ main ]
 
 jobs:
   build-user:
@@ -13,22 +11,16 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - name: Set up JDK 17
+        uses: actions/setup-java@v3
         with:
-          node-version: 20
-
-      - name: Setup Java
-        uses: actions/setup-java@v4
-        with:
-          distribution: 'zulu'
           java-version: '17'
+          distribution: 'temurin'
 
-      - name: Setup Expo
-        uses: expo/expo-github-action@v8
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
         with:
-          expo-version: latest
-          packager: npm
+          node-version: 18
 
       - name: Install dependencies
         working-directory: ./mizofy-tv-user
@@ -36,7 +28,7 @@ jobs:
 
       - name: Generate Android project
         working-directory: ./mizofy-tv-user
-        run: npx expo prebuild --clean
+        run: npx expo prebuild --platform android --no-install
 
       - name: Build APK with Gradle
         working-directory: ./mizofy-tv-user/android
@@ -46,7 +38,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: Mizofy-User-APK
-          path: ./mizofy-tv-user/android/app/build/outputs/apk/release/app-release.apk
+          path: mizofy-tv-user/android/app/build/outputs/apk/release/app-release.apk
 
   build-admin:
     name: Build Admin App APK
@@ -55,50 +47,31 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - name: Set up JDK 17
+        uses: actions/setup-java@v3
         with:
-          node-version: 20
-
-      - name: Setup Java
-        uses: actions/setup-java@v4
-        with:
-          distribution: 'zulu'
           java-version: '17'
+          distribution: 'temurin'
 
-      - name: Setup Expo
-        uses: expo/expo-github-action@v8
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
         with:
-          expo-version: latest
-          packager: npm
+          node-version: 18
 
       - name: Install dependencies
-        working-directory: ./mizofy-tv-admin
+        working-directory: ./mizofy-tv-admin/mizofy-tv-app
         run: npm install
 
-      - name: Setup Admin Build Environment
-        run: |
-          mkdir -p admin-build
-          cp -r mizofy-tv-admin/* admin-build/
-          # Ensure no root node_modules interfere
-          rm -rf node_modules
+      - name: Generate Android project
+        working-directory: ./mizofy-tv-admin/mizofy-tv-app
+        run: npx expo prebuild --platform android --no-install
 
-      - name: Install Admin Dependencies
-        working-directory: ./admin-build
-        run: npm install --legacy-peer-deps
-
-      - name: Generate Admin Android Project
-        working-directory: ./admin-build
-        run: npx expo prebuild --platform android
-
-      - name: Build Admin APK
-        working-directory: ./admin-build/android
-        env:
-          REACT_NATIVE_NODE_MODULES_DIR: ../node_modules
+      - name: Build APK with Gradle
+        working-directory: ./mizofy-tv-admin/mizofy-tv-app/android
         run: ./gradlew assembleRelease
 
       - name: Upload Admin APK
         uses: actions/upload-artifact@v4
         with:
           name: Mizofy-Admin-APK
-          path: admin-build/android/app/build/outputs/apk/release/app-release.apk
+          path: mizofy-tv-admin/mizofy-tv-app/android/app/build/outputs/apk/release/app-release.apk
