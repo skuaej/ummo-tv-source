@@ -83,12 +83,13 @@ jobs:
       - name: Patch Gradle for React Native Path
         working-directory: ./mizofy-tv-admin
         run: |
-          # Fix the "Cannot convert '' to File" error by manually pointing to react.gradle
-          sed -i 's|new File(\[.*"react-native/package.json".*\].execute(null, null).text.trim(), "../react.gradle")|new File("../../node_modules/react-native/react.gradle")|g' android/app/build.gradle
+          # Robust patch for the "Cannot convert '' to File" error
+          cd android/app
+          sed -i 's|new File(\[.*"react-native/package.json".*\].execute(null, null).text.trim(), "../react.gradle")|new File("../../../node_modules/react-native/react.gradle")|g' build.gradle
 
       - name: Build APK with Gradle
         working-directory: ./mizofy-tv-admin/android
-        run: ./gradlew assembleRelease
+        run: ./gradlew assembleRelease -PreactNativeRoot=../../node_modules/react-native
 
       - name: Upload Admin APK
         uses: actions/upload-artifact@v4
