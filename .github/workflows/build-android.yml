@@ -76,23 +76,29 @@ jobs:
         working-directory: ./mizofy-tv-admin
         run: npm install
 
-      - name: Generate Android project
-        working-directory: ./mizofy-tv-admin
-        run: npx expo prebuild --clean
-
-      - name: Patch Gradle for React Native Path
-        working-directory: ./mizofy-tv-admin
+      - name: Setup Admin Build Environment
         run: |
-          # Robust patch for the "Cannot convert '' to File" error
-          cd android/app
-          sed -i 's|new File(\[.*"react-native/package.json".*\].execute(null, null).text.trim(), "../react.gradle")|new File("../../../node_modules/react-native/react.gradle")|g' build.gradle
+          mkdir -p admin-build
+          cp -r mizofy-tv-admin/* admin-build/
+          # Ensure no root node_modules interfere
+          rm -rf node_modules
 
-      - name: Build APK with Gradle
-        working-directory: ./mizofy-tv-admin/android
-        run: ./gradlew assembleRelease -PreactNativeRoot=../../node_modules/react-native
+      - name: Install Admin Dependencies
+        working-directory: ./admin-build
+        run: npm install --legacy-peer-deps
+
+      - name: Generate Admin Android Project
+        working-directory: ./admin-build
+        run: npx expo prebuild --platform android
+
+      - name: Build Admin APK
+        working-directory: ./admin-build/android
+        env:
+          REACT_NATIVE_NODE_MODULES_DIR: ../node_modules
+        run: ./gradlew assembleRelease
 
       - name: Upload Admin APK
         uses: actions/upload-artifact@v4
         with:
           name: Mizofy-Admin-APK
-          path: ./mizofy-tv-admin/android/app/build/outputs/apk/release/app-release.apk
+          path: admin-build/android/app/build/outputs/apk/release/app-release.apk
