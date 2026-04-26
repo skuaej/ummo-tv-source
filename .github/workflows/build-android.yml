@@ -80,6 +80,12 @@ jobs:
         working-directory: ./mizofy-tv-admin
         run: npx expo prebuild --clean
 
+      - name: Patch Gradle for React Native Path
+        working-directory: ./mizofy-tv-admin
+        run: |
+          # Fix the "Cannot convert '' to File" error by manually pointing to react.gradle
+          sed -i 's|new File(\[.*"react-native/package.json".*\].execute(null, null).text.trim(), "../react.gradle")|new File("../../node_modules/react-native/react.gradle")|g' android/app/build.gradle
+
       - name: Build APK with Gradle
         working-directory: ./mizofy-tv-admin/android
         run: ./gradlew assembleRelease
