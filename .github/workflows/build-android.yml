@@ -1,0 +1,91 @@
+name: Build Mizofy TV APKs
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-user:
+    name: Build User App APK
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+
+      - name: Setup Expo
+        uses: expo/expo-github-action@v8
+        with:
+          expo-version: latest
+          packager: npm
+
+      - name: Install dependencies
+        working-directory: ./mizofy-tv-user
+        run: npm install
+
+      - name: Generate Android project
+        working-directory: ./mizofy-tv-user
+        run: npx expo prebuild --clean
+
+      - name: Build APK with Gradle
+        working-directory: ./mizofy-tv-user/android
+        run: ./gradlew assembleRelease
+
+      - name: Upload User APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: Mizofy-User-APK
+          path: ./mizofy-tv-user/android/app/build/outputs/apk/release/app-release.apk
+
+  build-admin:
+    name: Build Admin App APK
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+
+      - name: Setup Expo
+        uses: expo/expo-github-action@v8
+        with:
+          expo-version: latest
+          packager: npm
+
+      - name: Install dependencies
+        working-directory: ./mizofy-tv-admin
+        run: npm install
+
+      - name: Generate Android project
+        working-directory: ./mizofy-tv-admin
+        run: npx expo prebuild --clean
+
+      - name: Build APK with Gradle
+        working-directory: ./mizofy-tv-admin/android
+        run: ./gradlew assembleRelease
+
+      - name: Upload Admin APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: Mizofy-Admin-APK
+          path: ./mizofy-tv-admin/android/app/build/outputs/apk/release/app-release.apk
